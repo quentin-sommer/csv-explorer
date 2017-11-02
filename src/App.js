@@ -2,9 +2,10 @@ import React, {Component} from 'react'
 import {
   Table,
   Column,
-  MultiGrid,
   AutoSizer,
   ArrowKeyStepper,
+  SortDirection,
+  SortIndicator,
 } from 'react-virtualized'
 import copy from 'copy-to-clipboard'
 import testCsv from './testCsv'
@@ -34,63 +35,19 @@ window.addEventListener('keydown', function(e) {
 class App extends Component {
   state = {
     rows: [],
-    filteredRows: [],
+    sortedRows: [],
     headerCells: [],
     columnWidths: [],
     searchTerm: null,
     loadingState: null,
-    sortByColumn: null,
+    sortDirection: null,
+    sortBy: null,
   }
+
   componentDidMount() {
-    //this.processCsvFile(testCsv)
+    this.processCsvFile(testCsv)
   }
-  onCellClick = e => {
-    document.execCommand('copy')
-  }
-  onHeaderClick = e => {
-    const str = e.target.innerHTML
-    console.log('header click', str)
-    console.log(this.state.headerCells, this.state.headerCells.indexOf(str))
 
-    const sortBy = this.state.headerCells.indexOf(str)
-    const sorted = this.state.rows.sort((a, b) => a[sortBy] - b[sortBy])
-    const sortedFiltered = this.state.rows.sort((a, b) => a[sortBy] - b[sortBy])
-
-    console.log(sorted)
-    this.setState(prevState => ({
-      rows: sorted,
-      filteredRows: sortedFiltered,
-      sortByColumn: sortBy,
-    }))
-  }
-  onCellCopy = e => {
-    e.preventDefault()
-    if (e.clipboardData) {
-      e.clipboardData.setData('text/plain', e.target.innerHTML)
-      console.log(`Copied ${e.clipboardData.getData('text')}`)
-    }
-  }
-  cellRenderer = ({columnIndex, key, rowIndex, style}) => {
-    const Tag = this.state.filteredRows[rowIndex][columnIndex]
-      .toLowerCase()
-      .includes(this.state.searchTerm)
-      ? 'mark'
-      : 'div'
-
-    return (
-      <Tag
-        onClick={rowIndex === 0 ? this.onHeaderClick : this.onCellClick}
-        onCopy={this.onCellCopy}
-        key={key}
-        style={{
-          ...style,
-          ...(rowIndex === 0 ? headerStyle : cellStyle),
-        }}
-      >
-        {this.state.filteredRows[rowIndex][columnIndex]}
-      </Tag>
-    )
-  }
   processCsvFile = fileContent => {
     const toIndex = []
 
@@ -124,11 +81,15 @@ class App extends Component {
 
     this.setState({
       rows,
-      filteredRows: rows,
       headerCells,
       columnWidths,
       searcher: toIndex,
       loadingState: null,
+      ...this._sort({
+        sortBy: this.state.sortBy,
+        sortDirection: this.state.sortDirection,
+        rows,
+      }),
     })
   }
   colRenderer = ({index}) => {
@@ -153,25 +114,28 @@ class App extends Component {
     const searchText = e.target.value.trim().toLowerCase()
 
     if (searchText === '') {
-      return this.setState({
-        filteredRows: this.state.rows,
+      return this.setState(prevState => ({
+        ...this._sort({
+          sortBy: prevState.sortBy,
+          sortDirection: prevState.sortDirection,
+          rows: prevState.rows,
+        }),
         searchTerm: null,
-      })
+      }))
     }
     perfStart('manual search')
-    const res = this.state.searcher.filter(row =>
-      row.valuesStr.includes(searchText)
-    )
+    const newRows = this.state.searcher
+      .filter(row => row.valuesStr.includes(searchText))
+      .map(result => this.state.rows[result.rowIdx])
     perfEnd('manual search')
-
-    const newRows = [
-      this.state.rows[0],
-      ...res.map(result => this.state.rows[result.rowIdx]),
-    ]
-    this.setState({
-      filteredRows: newRows,
+    this.setState(prevState => ({
+      ...this._sort({
+        sortBy: prevState.sortBy,
+        sortDirection: prevState.sortDirection,
+        rows: newRows,
+      }),
       searchTerm: searchText,
-    })
+    }))
   }
 
   render() {
@@ -199,10 +163,10 @@ class App extends Component {
             onChange={this.getCsvFile}
           />
           <div style={{marginLeft: '.5rem', flex: 1}}>
-            Showing {this.state.filteredRows.length} of {this.state.rows.length}{' '}
+            Showing {this.state.sortedRows.length} of {this.state.rows.length}{' '}
             rows
             <div>
-              {this.state.headerCells.length} columns {this.state.loadingState}
+              {this.state.headerCells.length} columns {this.state.loadingState}{' '}
             </div>
           </div>
           <div>
@@ -225,9 +189,24 @@ class App extends Component {
                 height={height - 15}
                 headerHeight={24}
                 rowHeight={22}
-                rowCount={this.state.filteredRows.length}
-                rowGetter={({index}) => this.state.filteredRows[index]}
+                rowCount={this.state.sortedRows.length}
+                rowGetter={({index}) => this.state.sortedRows[index]}
                 onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
+                sort={({sortBy, sortDirection}) => {
+                  let newSort =
+                    this.state.sortDirection === SortDirection.ASC
+                      ? SortDirection.DESC
+                      : SortDirection.ASC
+                  this.setState({
+                    ...this._sort({
+                      sortBy,
+                      sortDirection: newSort,
+                      rows: this.state.sortedRows,
+                    }),
+                  })
+                }}
+                sortBy={`${this.state.sortBy}`}
+                sortDirection={this.state.sortDirection}
               >
                 {this.state.columnWidths.map((colWidth, index) => (
                   <Column
@@ -235,6 +214,17 @@ class App extends Component {
                     dataKey={index}
                     width={colWidth * 13}
                     label={this.state.headerCells[index]}
+                    headerRenderer={({dataKey, sortBy, sortDirection}) => {
+                      sortBy = parseInt(sortBy, 10)
+                      return (
+                        <div>
+                          {this.state.headerCells[dataKey]}
+                          {sortBy === dataKey && (
+                            <SortIndicator sortDirection={sortDirection} />
+                          )}
+                        </div>
+                      )
+                    }}
                   />
                 ))}
               </Table>
@@ -243,6 +233,22 @@ class App extends Component {
         </div>
       </div>
     )
+  }
+
+  _sort({sortBy, sortDirection, rows}) {
+    let sortedRows
+
+    if (sortDirection === SortDirection.DESC) {
+      sortedRows = [...rows].sort((a, b) => a[sortBy] - b[sortBy]).reverse()
+    } else {
+      sortedRows = [...rows].sort((a, b) => a[sortBy] - b[sortBy])
+    }
+
+    return {
+      sortedRows,
+      sortDirection,
+      sortBy,
+    }
   }
 }
 
