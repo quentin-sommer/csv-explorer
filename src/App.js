@@ -6,6 +6,7 @@ import {
   AutoSizer,
   ArrowKeyStepper,
 } from 'react-virtualized'
+import copy from 'copy-to-clipboard'
 import testCsv from './testCsv'
 
 import 'react-virtualized/styles.css'
@@ -21,6 +22,14 @@ const cellStyle = {
 }
 const perfStart = str => console.time(str)
 const perfEnd = str => console.timeEnd(str)
+
+// set focus to our search input when CTRL + f is pressed
+window.addEventListener('keydown', function(e) {
+  if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+    e.preventDefault()
+    document.querySelector('#search-input').focus()
+  }
+})
 
 class App extends Component {
   state = {
@@ -166,7 +175,6 @@ class App extends Component {
   }
 
   render() {
-    console.log(this.state.filteredRows)
     return (
       <div
         className="full-height"
@@ -199,6 +207,7 @@ class App extends Component {
           </div>
           <div>
             <input
+              id="search-input"
               style={{marginLeft: '1rem'}}
               type="text"
               onChange={this.handleOnSearchChange}
@@ -218,6 +227,7 @@ class App extends Component {
                 rowHeight={22}
                 rowCount={this.state.filteredRows.length}
                 rowGetter={({index}) => this.state.filteredRows[index]}
+                onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
               >
                 {this.state.columnWidths.map((colWidth, index) => (
                   <Column

@@ -12,6 +12,7 @@
     "test:watch": "nwb test-react --server"
   },
   "dependencies": {
+    "copy-to-clipboard": "^3.0.8",
     "react": "^16.0.0",
     "react-dom": "^16.0.0",
     "react-virtualized": "^9.12.0"
