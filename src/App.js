@@ -8,7 +8,6 @@ import {
   SortIndicator,
 } from 'react-virtualized'
 import copy from 'copy-to-clipboard'
-import testCsv from './testCsv'
 
 import 'react-virtualized/styles.css'
 
@@ -45,9 +44,13 @@ class App extends Component {
     sortBy: null,
   }
 
+  // Only used in dev to pre load q csv
+  /*
   componentDidMount() {
+    const testCsv = require('./testCsv').default
     this.processCsvFile(testCsv)
   }
+  */
 
   processCsvFile = fileContent => {
     const toIndex = []
