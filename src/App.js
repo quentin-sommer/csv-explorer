@@ -10,8 +10,6 @@ import testCsv from './testCsv'
 
 import 'react-virtualized/styles.css'
 
-let searchApi
-
 const headerStyle = {
   borderRight: '1px solid #455A64',
   borderBottom: '1px solid #455A64',
@@ -202,9 +200,35 @@ class App extends Component {
             />
           </div>
         </div>
-        <div style={{flex: 1}}>
+        <div style={{flex: 1, overflowX: 'scroll'}}>
           <AutoSizer>
             {({width, height}) => (
+              <Table
+                width={
+                  this.state.columnWidths.reduce((acc, cur) => acc + cur, 0) *
+                  13
+                }
+                height={height}
+                headerHeight={20}
+                rowHeight={24}
+                rowCount={this.state.filteredRows.length}
+                rowGetter={({index}) => this.state.filteredRows[index]}
+              >
+                {this.state.columnWidths.map((colWidth, index) => (
+                  <Column key={index} dataKey={index} width={colWidth * 13} />
+                ))}
+              </Table>
+            )}
+          </AutoSizer>
+        </div>
+      </div>
+    )
+  }
+}
+
+export default App
+
+/*
               <MultiGrid
                 overscanColumnCount={500}
                 fixedRowCount={1}
@@ -217,13 +241,4 @@ class App extends Component {
                 rowHeight={24}
                 width={width}
                 sortBy={this.state.sortByColumn}
-              />
-            )}
-          </AutoSizer>
-        </div>
-      </div>
-    )
-  }
-}
-
-export default App
+              />*/
