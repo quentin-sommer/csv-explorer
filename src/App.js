@@ -104,7 +104,7 @@ class App extends Component {
       })
     perfEnd('processed rows')
     perfStart('processed headers')
-    const headerCells = rows[0]
+    const headerCells = rows.shift()
     const columnWidths = headerCells.map((_, colIndex) => {
       let len = rows.reduce((acc, row) => {
         return row[colIndex].length > acc ? row[colIndex].length : acc
@@ -172,9 +172,16 @@ class App extends Component {
         className="full-height"
         style={{display: 'flex', flexDirection: 'column'}}
       >
-        <div style={{display: 'flex', margin: '.25rem', marginLeft: '.5rem'}}>
+        <div
+          style={{
+            display: 'flex',
+            margin: '.25rem',
+            marginLeft: '.5rem',
+            maxWidth: '700px',
+          }}
+        >
           <label className="button" htmlFor="file">
-            Select csv file
+            Select CSV file
           </label>
           <input
             style={{display: 'none'}}
@@ -183,11 +190,9 @@ class App extends Component {
             multiple="false"
             onChange={this.getCsvFile}
           />
-          <div style={{marginLeft: '.5rem'}}>
-            Showing{' '}
-            {this.state.filteredRows.length !== 0
-              ? this.state.filteredRows.length - 1
-              : 0}/{this.state.rows.length} rows
+          <div style={{marginLeft: '.5rem', flex: 1}}>
+            Showing {this.state.filteredRows.length} of {this.state.rows.length}{' '}
+            rows
             <div>
               {this.state.headerCells.length} columns {this.state.loadingState}
             </div>
@@ -200,22 +205,27 @@ class App extends Component {
             />
           </div>
         </div>
-        <div style={{flex: 1, overflowX: 'scroll'}}>
-          <AutoSizer>
-            {({width, height}) => (
+        <div style={{flex: 1, overflowX: 'auto'}}>
+          <AutoSizer disableWidth>
+            {({height}) => (
               <Table
                 width={
                   this.state.columnWidths.reduce((acc, cur) => acc + cur, 0) *
                   13
                 }
-                height={height}
-                headerHeight={20}
-                rowHeight={24}
+                height={height - 15}
+                headerHeight={24}
+                rowHeight={22}
                 rowCount={this.state.filteredRows.length}
                 rowGetter={({index}) => this.state.filteredRows[index]}
               >
                 {this.state.columnWidths.map((colWidth, index) => (
-                  <Column key={index} dataKey={index} width={colWidth * 13} />
+                  <Column
+                    key={index}
+                    dataKey={index}
+                    width={colWidth * 13}
+                    label={this.state.headerCells[index]}
+                  />
                 ))}
               </Table>
             )}
