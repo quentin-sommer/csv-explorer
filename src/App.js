@@ -40,6 +40,7 @@ class App extends Component {
     columnWidths: [],
     searchTerm: null,
     loadingState: null,
+    filename: null,
     sortDirection: null,
     sortBy: null,
   }
@@ -106,6 +107,7 @@ class App extends Component {
     perfStart('read the file')
     this.setState({
       loadingState: 'Reading file',
+      filename: e.target.files[0].name,
     })
     reader.readAsText(e.target.files[0])
   }
@@ -149,7 +151,7 @@ class App extends Component {
             display: 'flex',
             margin: '.25rem',
             marginLeft: '.5rem',
-            maxWidth: '700px',
+            maxWidth: '900px',
           }}
         >
           <label className="button" htmlFor="file">
@@ -167,6 +169,7 @@ class App extends Component {
             rows
             <div>
               {this.state.headerCells.length} columns {this.state.loadingState}{' '}
+              {this.state.filename}
             </div>
           </div>
           <div>
