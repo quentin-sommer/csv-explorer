@@ -64,8 +64,9 @@ class App extends Component {
         lineArr = line.split(',')
         if (rowIdx !== 0) {
           toIndex.push({
-            id: `${rowIdx}`,
-            rowIdx,
+            // -1 because we shift the starting row later
+            id: `${rowIdx - 1}`,
+            rowIdx: rowIdx - 1,
             values: lineArr,
             valuesStr: line.toLowerCase(),
           })
@@ -259,18 +260,3 @@ class App extends Component {
 }
 
 export default App
-
-/*
-              <MultiGrid
-                overscanColumnCount={500}
-                fixedRowCount={1}
-                columnCount={this.state.headerCells.length}
-                rowCount={this.state.filteredRows.length}
-                cellRenderer={this.cellRenderer}
-                columnWidth={param => this.colRenderer(param)}
-                height={height}
-                //scrollToRow={500}
-                rowHeight={24}
-                width={width}
-                sortBy={this.state.sortByColumn}
-              />*/
