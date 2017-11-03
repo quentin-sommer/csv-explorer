@@ -45,7 +45,7 @@ const csvLineParser = row => {
 
 // set focus to our search input when CTRL + f is pressed
 window.addEventListener('keydown', function(e) {
-  if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+  if (e.keyCode === 114 || ((e.ctrlKey || e.metaKey) && e.keyCode === 70)) {
     e.preventDefault()
     document.querySelector('#search-input').focus()
   }
@@ -116,6 +116,8 @@ class App extends Component {
         rows,
       }),
     })
+    // place focus on search input
+    document.querySelector('#search-input').focus()
   }
   colRenderer = ({index}) => {
     return this.state.columnWidths[index] * 13
