@@ -23,6 +23,26 @@ const cellStyle = {
 const perfStart = str => console.time(str)
 const perfEnd = str => console.timeEnd(str)
 
+const csvLineParser = row => {
+  const cells = []
+  let isEscaped = false
+  let cellContent = ''
+  let char
+  let len = row.length
+  for (let i = 0; i < len; i++) {
+    char = row[i]
+    if (char === '"') isEscaped = !isEscaped
+    if (char === ',' && !isEscaped) {
+      cells.push(cellContent)
+      cellContent = ''
+    } else {
+      cellContent += char
+    }
+  }
+  cells.push(cellContent)
+  return cells
+}
+
 // set focus to our search input when CTRL + f is pressed
 window.addEventListener('keydown', function(e) {
   if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
@@ -61,7 +81,7 @@ class App extends Component {
       .split('\n')
       .filter(row => row.trim() !== '')
       .map((line, rowIdx) => {
-        lineArr = line.split(',')
+        lineArr = csvLineParser(line)
         if (rowIdx !== 0) {
           toIndex.push({
             // -1 because we shift the starting row later
