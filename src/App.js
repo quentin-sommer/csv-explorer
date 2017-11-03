@@ -243,12 +243,24 @@ class App extends Component {
   }
 
   _sort({sortBy, sortDirection, rows}) {
+    if (sortBy === null)
+      return {
+        sortedRows: rows,
+        sortDirection,
+        sortBy,
+      }
+
+    const sortFn = (a, b) => {
+      if (a[sortBy] == b[sortBy]) return 0
+      return a[sortBy] > b[sortBy] ? 1 : -1
+    }
+
     let sortedRows
 
     if (sortDirection === SortDirection.DESC) {
-      sortedRows = [...rows].sort((a, b) => a[sortBy] - b[sortBy]).reverse()
+      sortedRows = [...rows].sort(sortFn).reverse()
     } else {
-      sortedRows = [...rows].sort((a, b) => a[sortBy] - b[sortBy])
+      sortedRows = [...rows].sort(sortFn)
     }
 
     return {
