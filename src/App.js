@@ -3,7 +3,6 @@ import {
   Table,
   Column,
   AutoSizer,
-  ArrowKeyStepper,
   SortDirection,
   SortIndicator,
 } from 'react-virtualized'
@@ -11,15 +10,6 @@ import copy from 'copy-to-clipboard'
 
 import 'react-virtualized/styles.css'
 
-const headerStyle = {
-  borderRight: '1px solid #455A64',
-  borderBottom: '1px solid #455A64',
-  textAlign: 'center',
-}
-
-const cellStyle = {
-  ...headerStyle,
-}
 const perfStart = str => console.time(str)
 const perfEnd = str => console.timeEnd(str)
 
@@ -66,10 +56,12 @@ class App extends Component {
   }
 
   // Only used in dev to pre load q csv
+  /*
   componentDidMount() {
     const testCsv = require('./testCsv').default
     this.processCsvFile(testCsv)
   }
+  */
 
   processCsvFile = fileContent => {
     const fileLines = fileContent.split('\n').filter(row => row.trim() !== '')
@@ -80,8 +72,7 @@ class App extends Component {
     const columnWidths = headerCells.map((_, colIndex) => {
       const headerLen = headerCells[colIndex].length
       const lineLen = firstLine[colIndex].length
-      const biggest = headerLen < lineLen ? lineLen : headerLen
-      return (biggest / 1.2) | 0
+      return headerLen < lineLen ? lineLen : headerLen
       /*
       let len = rows.reduce((acc, row) => {
         return row[colIndex].length > acc ? row[colIndex].length : acc
@@ -113,7 +104,7 @@ class App extends Component {
     })
     // place focus on search input
     document.querySelector('#search-input').focus()
-    const worker = new Worker('src/worker.js')
+    const worker = new Worker('worker.js')
     worker.onmessage = e => {
       perfEnd('worker total')
       const rows = e.data
@@ -128,9 +119,6 @@ class App extends Component {
     }
     perfStart('worker total')
     worker.postMessage(fileLines)
-  }
-  colRenderer = ({index}) => {
-    return this.state.columnWidths[index] * 13
   }
 
   getCsvFile = e => {

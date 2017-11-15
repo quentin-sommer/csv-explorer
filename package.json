@@ -1,24 +1,20 @@
 {
-  "name": "csvViewer",
+  "name": "csv-explorer",
   "version": "1.0.0",
-  "description": "Describe csvViewer here",
+  "description": "csv-explorer",
   "private": true,
   "scripts": {
-    "build": "nwb build-react-app",
-    "clean": "nwb clean-app",
-    "start": "nwb serve-react-app",
-    "test": "nwb test-react",
-    "test:coverage": "nwb test-react --coverage",
-    "test:watch": "nwb test-react --server"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   },
   "dependencies": {
     "copy-to-clipboard": "^3.0.8",
-    "react": "^16.0.0",
-    "react-dom": "^16.0.0",
+    "react": "^16.1.1",
+    "react-dom": "^16.1.1",
+    "react-scripts": "1.0.17",
     "react-virtualized": "^9.12.0"
-  },
-  "devDependencies": {
-    "nwb": "0.19.x"
   },
   "author": "",
   "license": "MIT",
