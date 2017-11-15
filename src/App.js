@@ -62,62 +62,72 @@ class App extends Component {
     filename: null,
     sortDirection: null,
     sortBy: null,
+    sortable: false,
   }
 
   // Only used in dev to pre load q csv
-  /*
   componentDidMount() {
     const testCsv = require('./testCsv').default
     this.processCsvFile(testCsv)
   }
-  */
 
   processCsvFile = fileContent => {
-    const toIndex = []
+    const fileLines = fileContent.split('\n').filter(row => row.trim() !== '')
 
-    perfStart('processed rows')
-    let lineArr
-    const rows = fileContent
-      .split('\n')
-      .filter(row => row.trim() !== '')
-      .map((line, rowIdx) => {
-        lineArr = csvLineParser(line)
-        if (rowIdx !== 0) {
-          toIndex.push({
-            // -1 because we shift the starting row later
-            id: `${rowIdx - 1}`,
-            rowIdx: rowIdx - 1,
-            values: lineArr,
-            valuesStr: line.toLowerCase(),
-          })
-        }
-        return lineArr
-      })
-    perfEnd('processed rows')
     perfStart('processed headers')
-    const headerCells = rows.shift()
+    const headerCells = csvLineParser(fileLines.shift())
+    const firstLine = csvLineParser(fileLines[0])
     const columnWidths = headerCells.map((_, colIndex) => {
+      const headerLen = headerCells[colIndex].length
+      const lineLen = firstLine[colIndex].length
+      const biggest = headerLen < lineLen ? lineLen : headerLen
+      return (biggest / 1.2) | 0
+      /*
       let len = rows.reduce((acc, row) => {
         return row[colIndex].length > acc ? row[colIndex].length : acc
       }, headerCells[colIndex].length)
       return len
+      */
     })
     perfEnd('processed headers')
+    perfStart('processed rows')
+    const toIndex = new Array(fileLines.length)
+    fileLines.forEach((line, rowIdx) => {
+      toIndex[rowIdx] = {
+        rowIdx: rowIdx,
+        valuesStr: line.toLowerCase(),
+      }
+    })
+    perfEnd('processed rows')
 
     this.setState({
-      rows,
+      rows: fileLines,
       headerCells,
       columnWidths,
       searcher: toIndex,
-      loadingState: null,
-      ...this._sort({
-        sortBy: this.state.sortBy,
-        sortDirection: this.state.sortDirection,
-        rows,
-      }),
+      loadingState: 'Building sort index',
+      sortable: false,
+      sortBy: null,
+      sortDirection: null,
+      sortedRows: fileLines,
     })
     // place focus on search input
     document.querySelector('#search-input').focus()
+    const worker = new Worker('src/worker.js')
+    worker.onmessage = e => {
+      perfEnd('worker total')
+      const rows = e.data
+      this.setState({
+        sortable: true,
+        rows: rows,
+        sortedRows: rows,
+        loadingState: null,
+      })
+      // reset search as it will no longer be representative of current rows
+      document.querySelector('#search-input').value = ''
+    }
+    perfStart('worker total')
+    worker.postMessage(fileLines)
   }
   colRenderer = ({index}) => {
     return this.state.columnWidths[index] * 13
@@ -219,7 +229,10 @@ class App extends Component {
                 headerHeight={24}
                 rowHeight={22}
                 rowCount={this.state.sortedRows.length}
-                rowGetter={({index}) => this.state.sortedRows[index]}
+                rowGetter={({index}) =>
+                  this.state.sortable
+                    ? this.state.sortedRows[index]
+                    : csvLineParser(this.state.sortedRows[index])}
                 onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
                 sort={({sortBy, sortDirection}) => {
                   let newSort =
@@ -239,6 +252,7 @@ class App extends Component {
               >
                 {this.state.columnWidths.map((colWidth, index) => (
                   <Column
+                    disableSort={!this.state.sortable}
                     key={index}
                     dataKey={index}
                     width={colWidth * 13}
@@ -263,6 +277,7 @@ class App extends Component {
       </div>
     )
   }
+  static sorterCache = null
 
   _sort({sortBy, sortDirection, rows}) {
     if (sortBy === null)
@@ -271,19 +286,20 @@ class App extends Component {
         sortDirection,
         sortBy,
       }
-
-    const sortFn = (a, b) => {
-      if (a[sortBy] == b[sortBy]) return 0
-      return a[sortBy] > b[sortBy] ? 1 : -1
-    }
+    perfStart('row sorting')
+    const collator = new Intl.Collator(undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    })
+    const sortFn = (a, b) => collator.compare(a[sortBy], b[sortBy])
 
     let sortedRows
-
     if (sortDirection === SortDirection.DESC) {
       sortedRows = [...rows].sort(sortFn).reverse()
     } else {
       sortedRows = [...rows].sort(sortFn)
     }
+    perfEnd('row sorting')
 
     return {
       sortedRows,
