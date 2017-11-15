@@ -91,12 +91,15 @@ class App extends Component {
     })
     perfEnd('processed rows')
 
+    const shouldBuildSortIndex = fileLines.length < 2e6
     this.setState({
       rows: fileLines,
       headerCells,
       columnWidths,
       searcher: toIndex,
-      loadingState: 'Building sort index',
+      loadingState: shouldBuildSortIndex
+        ? 'Building sort index...'
+        : 'No sort available: file is too big...',
       sortable: false,
       sortBy: null,
       sortDirection: null,
@@ -104,21 +107,23 @@ class App extends Component {
     })
     // place focus on search input
     document.querySelector('#search-input').focus()
-    const worker = new Worker('worker.js')
-    worker.onmessage = e => {
-      perfEnd('worker total')
-      const rows = e.data
-      this.setState({
-        sortable: true,
-        rows: rows,
-        sortedRows: rows,
-        loadingState: null,
-      })
-      // reset search as it will no longer be representative of current rows
-      document.querySelector('#search-input').value = ''
+    if (shouldBuildSortIndex) {
+      const worker = new Worker('worker.js')
+      worker.onmessage = e => {
+        perfEnd('worker total')
+        const rows = e.data
+        this.setState({
+          sortable: true,
+          rows: rows,
+          sortedRows: rows,
+          loadingState: null,
+        })
+        // reset search as it will no longer be representative of current rows
+        document.querySelector('#search-input').value = ''
+      }
+      perfStart('worker total')
+      worker.postMessage(fileLines)
     }
-    perfStart('worker total')
-    worker.postMessage(fileLines)
   }
 
   getCsvFile = e => {
@@ -130,7 +135,7 @@ class App extends Component {
     })
     perfStart('read the file')
     this.setState({
-      loadingState: 'Reading file',
+      loadingState: 'Reading file...',
       filename: e.target.files[0].name,
     })
     reader.readAsText(e.target.files[0])
@@ -192,8 +197,8 @@ class App extends Component {
             Showing {this.state.sortedRows.length} of {this.state.rows.length}{' '}
             rows
             <div>
-              {this.state.headerCells.length} columns {this.state.loadingState}{' '}
-              {this.state.filename}
+              {this.state.headerCells.length} columns {this.state.filename}{' '}
+              {this.state.loadingState}
             </div>
           </div>
           <div>
