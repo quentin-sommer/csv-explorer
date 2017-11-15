@@ -99,7 +99,7 @@ class App extends Component {
       searcher: toIndex,
       loadingState: shouldBuildSortIndex
         ? 'Building sort index...'
-        : 'No sort available: file is too big...',
+        : 'Sort unavailable: file too big',
       sortable: false,
       sortBy: null,
       sortDirection: null,
