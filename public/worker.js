@@ -1,4 +1,15 @@
+const columnWidths = []
 let buffer = []
+
+const incrementOrNot = (val, index) => {
+  if (columnWidths[index] === undefined) {
+    columnWidths[index] = 0
+  }
+  if (columnWidths[index] < val) {
+    columnWidths[index] = val
+  }
+}
+
 const csvLineParser = row => {
   if (buffer.length !== 0) {
     buffer = new Array(buffer.length)
@@ -13,6 +24,7 @@ const csvLineParser = row => {
     if (char === '"') isEscaped = !isEscaped
     if (char === ',' && !isEscaped) {
       buffer[bufferIt] = cellContent
+      incrementOrNot(cellContent.length, bufferIt)
       bufferIt++
       cellContent = ''
     } else {
@@ -20,7 +32,7 @@ const csvLineParser = row => {
     }
   }
   buffer[bufferIt] = cellContent
-  bufferIt++
+  incrementOrNot(cellContent.length, bufferIt)
   return buffer
 }
 
@@ -30,9 +42,8 @@ onmessage = function(e) {
   const rows = fileLines
     .filter(row => row.trim() !== '')
     .map((line, rowIdx) => csvLineParser(line))
-
   console.timeEnd('worker perf')
 
   console.log('Posting message back to main script', rows.length, 'lines')
-  postMessage(rows)
+  postMessage({rows, columnWidths})
 }

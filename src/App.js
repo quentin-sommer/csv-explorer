@@ -1,11 +1,5 @@
 import React, {Component} from 'react'
-import {
-  Table,
-  Column,
-  AutoSizer,
-  SortDirection,
-  SortIndicator,
-} from 'react-virtualized'
+import {Table, Column, AutoSizer, SortDirection, SortIndicator} from 'react-virtualized'
 import copy from 'copy-to-clipboard'
 
 import 'react-virtualized/styles.css'
@@ -56,12 +50,12 @@ class App extends Component {
   }
 
   // Only used in dev to pre load q csv
-  /*
   componentDidMount() {
-    const testCsv = require('./testCsv').default
-    this.processCsvFile(testCsv)
+    if (process.env.NODE_ENV !== 'production') {
+      const testCsv = require('./testCsv').default
+      this.processCsvFile(testCsv)
+    }
   }
-  */
 
   processCsvFile = fileContent => {
     const fileLines = fileContent.split('\n').filter(row => row.trim() !== '')
@@ -73,12 +67,6 @@ class App extends Component {
       const headerLen = headerCells[colIndex].length
       const lineLen = firstLine[colIndex].length
       return headerLen < lineLen ? lineLen : headerLen
-      /*
-      let len = rows.reduce((acc, row) => {
-        return row[colIndex].length > acc ? row[colIndex].length : acc
-      }, headerCells[colIndex].length)
-      return len
-      */
     })
     perfEnd('processed headers')
     perfStart('processed rows')
@@ -111,12 +99,19 @@ class App extends Component {
       const worker = new Worker('worker.js')
       worker.onmessage = e => {
         perfEnd('worker total')
-        const rows = e.data
+        const rows = e.data.rows
+        const columnWidths = e.data.columnWidths.map(
+          (columnWidth, index) =>
+            columnWidth > this.state.columnWidths[index]
+              ? columnWidth
+              : this.state.columnWidths[index]
+        )
         this.setState({
           sortable: true,
           rows: rows,
           sortedRows: rows,
           loadingState: null,
+          columnWidths,
         })
         // reset search as it will no longer be representative of current rows
         document.querySelector('#search-input').value = ''
@@ -171,10 +166,7 @@ class App extends Component {
 
   render() {
     return (
-      <div
-        className="full-height"
-        style={{display: 'flex', flexDirection: 'column'}}
-      >
+      <div className="full-height" style={{display: 'flex', flexDirection: 'column'}}>
         <div
           style={{
             display: 'flex',
@@ -194,8 +186,7 @@ class App extends Component {
             onChange={this.getCsvFile}
           />
           <div style={{marginLeft: '.5rem', flex: 1}}>
-            Showing {this.state.sortedRows.length} of {this.state.rows.length}{' '}
-            rows
+            Showing {this.state.sortedRows.length} of {this.state.rows.length} rows
             <div>
               {this.state.headerCells.length} columns {this.state.filename}{' '}
               {this.state.loadingState}
@@ -214,10 +205,7 @@ class App extends Component {
           <AutoSizer disableWidth>
             {({height}) => (
               <Table
-                width={
-                  this.state.columnWidths.reduce((acc, cur) => acc + cur, 0) *
-                  13
-                }
+                width={this.state.columnWidths.reduce((acc, cur) => acc + cur, 0) * 12}
                 height={height - 15}
                 headerHeight={24}
                 rowHeight={22}
@@ -248,7 +236,7 @@ class App extends Component {
                     disableSort={!this.state.sortable}
                     key={index}
                     dataKey={index}
-                    width={colWidth * 13}
+                    width={colWidth * 12}
                     label={this.state.headerCells[index]}
                     headerRenderer={({dataKey, sortBy, sortDirection}) => {
                       sortBy = parseInt(sortBy, 10)
