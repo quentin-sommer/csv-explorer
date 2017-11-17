@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import {Table, Column, AutoSizer, SortDirection, SortIndicator} from 'react-virtualized'
 import copy from 'copy-to-clipboard'
+import myWorker from './worker'
 
 import 'react-virtualized/styles.css'
 
@@ -35,6 +36,14 @@ window.addEventListener('keydown', function(e) {
   }
 })
 const colWidthToPx = colWidth => colWidth * 10 + 20
+
+const workerFromCode = workerModule => {
+  let code = myWorker.toString()
+  code = code.substring(code.indexOf('{') + 1, code.lastIndexOf('}'))
+  const blob = new Blob([code], {type: 'application/javascript'})
+
+  return URL.createObjectURL(blob)
+}
 
 class App extends Component {
   state = {
@@ -97,7 +106,7 @@ class App extends Component {
     // place focus on search input
     document.querySelector('#search-input').focus()
     if (shouldBuildSortIndex) {
-      const worker = new Worker('worker.js')
+      const worker = new Worker(workerFromCode(myWorker))
       worker.onmessage = e => {
         perfEnd('worker total')
         const rows = e.data.rows
