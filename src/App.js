@@ -34,6 +34,7 @@ window.addEventListener('keydown', function(e) {
     document.querySelector('#search-input').focus()
   }
 })
+const colWidthToPx = colWidth => colWidth * 10 + 20
 
 class App extends Component {
   state = {
@@ -205,7 +206,10 @@ class App extends Component {
           <AutoSizer disableWidth>
             {({height}) => (
               <Table
-                width={this.state.columnWidths.reduce((acc, cur) => acc + cur, 0) * 12}
+                width={this.state.columnWidths.reduce(
+                  (acc, cur) => acc + colWidthToPx(cur),
+                  0
+                )}
                 height={height - 15}
                 headerHeight={24}
                 rowHeight={22}
@@ -236,7 +240,7 @@ class App extends Component {
                     disableSort={!this.state.sortable}
                     key={index}
                     dataKey={index}
-                    width={colWidth * 12}
+                    width={colWidthToPx(colWidth)}
                     label={this.state.headerCells[index]}
                     headerRenderer={({dataKey, sortBy, sortDirection}) => {
                       sortBy = parseInt(sortBy, 10)
