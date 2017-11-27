@@ -253,6 +253,21 @@ class App extends Component {
                         </div>
                       )
                     }}
+                    cellRenderer={({cellData, ...rest}) => {
+                      if (cellData == null) {
+                        return ''
+                      }
+                      let style = null
+                      if (
+                        this.state.searchTerm !== null &&
+                        cellData
+                          .toLowerCase()
+                          .includes(this.state.searchTerm.toLowerCase())
+                      ) {
+                        style = {backgroundColor: '#ADD6FF26'}
+                      }
+                      return <span style={style}>{cellData}</span>
+                    }}
                   />
                 ))}
               </Table>
