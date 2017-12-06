@@ -48,6 +48,7 @@ class App extends Component {
     sortDirection: null,
     sortBy: null,
     sortable: false,
+    fileTag: '',
   }
 
   // Only used in dev to pre load q csv
@@ -173,7 +174,7 @@ class App extends Component {
             display: 'flex',
             margin: '.25rem',
             marginLeft: '.5rem',
-            maxWidth: '900px',
+            maxWidth: '1200px',
           }}
         >
           <label className="button" htmlFor="file">
@@ -189,16 +190,30 @@ class App extends Component {
           <div style={{marginLeft: '.5rem', flex: 1}}>
             Showing {this.state.sortedRows.length} of {this.state.rows.length} rows
             <div>
-              {this.state.headerCells.length} columns {this.state.filename}{' '}
-              {this.state.loadingState}
+              {this.state.headerCells.length} columns{' '}
+              {this.state.fileTag !== '' && (
+                <span style={{color: 'rgb(0, 116, 217)'}}>{this.state.fileTag} </span>
+              )}
+              {this.state.filename} {this.state.loadingState}
             </div>
           </div>
-          <div>
+          <div style={{marginLeft: '1rem'}}>
             <input
               id="search-input"
-              style={{marginLeft: '1rem'}}
               type="text"
+              placeholder="search"
               onChange={this.handleOnSearchChange}
+            />
+          </div>
+          <div style={{marginLeft: '1rem'}}>
+            <input
+              type="text"
+              placeholder="tag"
+              onChange={e =>
+                this.setState({
+                  fileTag: e.target.value,
+                })
+              }
             />
           </div>
         </div>
