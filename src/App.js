@@ -217,7 +217,8 @@ class App extends Component {
                 rowGetter={({index}) =>
                   this.state.sortable
                     ? this.state.sortedRows[index]
-                    : csvLineParser(this.state.sortedRows[index])}
+                    : csvLineParser(this.state.sortedRows[index])
+                }
                 onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
                 sort={({sortBy, sortDirection}) => {
                   let newSort =

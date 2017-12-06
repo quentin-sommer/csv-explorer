@@ -38,11 +38,11 @@ const csvLineParser = row => {
 
 onmessage = function(e) {
   const fileLines = e.data
-  console.time('worker perf')
+  console.time('Worker parsed file:')
   const rows = fileLines
     .filter(row => row.trim() !== '')
     .map((line, rowIdx) => csvLineParser(line))
-  console.timeEnd('worker perf')
+  console.timeEnd('Worker parsed file:')
 
   console.log('Posting message back to main script', rows.length, 'lines')
   postMessage({rows, columnWidths})
