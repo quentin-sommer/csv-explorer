@@ -2,6 +2,7 @@ import React, {Component} from 'react'
 import {Table, Column, AutoSizer, SortDirection, SortIndicator} from 'react-virtualized'
 import copy from 'copy-to-clipboard'
 import Dropzone from 'react-dropzone'
+import memoizee from 'memoizee'
 import workerCsvParser from './worker'
 
 import 'react-virtualized/styles.css'
@@ -9,7 +10,7 @@ import 'react-virtualized/styles.css'
 const perfStart = str => console.time(str)
 const perfEnd = str => console.timeEnd(str)
 
-const csvLineParser = row => {
+const memoizedCsvLineParser = memoizee(row => {
   const cells = []
   let isEscaped = false
   let cellContent = ''
@@ -27,7 +28,7 @@ const csvLineParser = row => {
   }
   cells.push(cellContent)
   return cells
-}
+})
 
 // set focus to our search input when CTRL + f is pressed
 window.addEventListener('keydown', function(e) {
@@ -63,11 +64,12 @@ class App extends Component {
   }
 
   processCsvFile = async fileContent => {
+    memoizedCsvLineParser.clear()
     const fileLines = fileContent.split('\n').filter(row => row.trim() !== '')
 
     perfStart('processed headers')
-    const headerCells = csvLineParser(fileLines.shift())
-    const firstLine = csvLineParser(fileLines[0])
+    const headerCells = memoizedCsvLineParser(fileLines.shift())
+    const firstLine = memoizedCsvLineParser(fileLines[0])
     const columnWidths = headerCells.map((_, colIndex) => {
       const headerLen = headerCells[colIndex].length
       const lineLen = firstLine[colIndex].length
@@ -258,7 +260,7 @@ class App extends Component {
                   rowGetter={({index}) =>
                     this.state.sortable
                       ? this.state.sortedRows[index]
-                      : csvLineParser(this.state.sortedRows[index])
+                      : memoizedCsvLineParser(this.state.sortedRows[index])
                   }
                   onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
                   sort={({sortBy, sortDirection}) => {

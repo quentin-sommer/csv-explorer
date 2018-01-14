@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "copy-to-clipboard": "^3.0.8",
+    "memoizee": "^0.4.11",
     "react": "^16.1.1",
     "react-dom": "^16.1.1",
     "react-dropzone": "^4.2.3",
