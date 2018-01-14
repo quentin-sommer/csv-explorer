@@ -2,6 +2,7 @@ import React, {Component} from 'react'
 import {Table, Column, AutoSizer, SortDirection, SortIndicator} from 'react-virtualized'
 import copy from 'copy-to-clipboard'
 import Dropzone from 'react-dropzone'
+import workerCsvParser from './worker'
 
 import 'react-virtualized/styles.css'
 
@@ -61,7 +62,7 @@ class App extends Component {
     }
   }
 
-  processCsvFile = fileContent => {
+  processCsvFile = async fileContent => {
     const fileLines = fileContent.split('\n').filter(row => row.trim() !== '')
 
     perfStart('processed headers')
@@ -100,28 +101,26 @@ class App extends Component {
     // place focus on search input
     document.querySelector('#search-input').focus()
     if (shouldBuildSortIndex) {
-      const worker = new Worker('worker.js')
-      worker.onmessage = e => {
-        perfEnd('worker total')
-        const rows = e.data.rows
-        const columnWidths = e.data.columnWidths.map(
-          (columnWidth, index) =>
-            columnWidth > this.state.columnWidths[index]
-              ? columnWidth
-              : this.state.columnWidths[index]
-        )
-        this.setState({
-          sortable: true,
-          rows: rows,
-          sortedRows: rows,
-          loadingState: null,
-          columnWidths,
-        })
-        // reset search as it will no longer be representative of current rows
-        document.querySelector('#search-input').value = ''
-      }
       perfStart('worker total')
-      worker.postMessage(fileLines)
+      const res = await workerCsvParser(fileLines)
+      const rows = res.rows
+      const columnWidths = res.columnWidths.map(
+        (columnWidth, index) =>
+          columnWidth > this.state.columnWidths[index]
+            ? columnWidth
+            : this.state.columnWidths[index]
+      )
+      perfEnd('worker total')
+
+      this.setState({
+        sortable: true,
+        rows: rows,
+        sortedRows: rows,
+        loadingState: null,
+        columnWidths,
+      })
+      // reset search as it will no longer be representative of current rows
+      document.querySelector('#search-input').value = ''
     }
   }
 
