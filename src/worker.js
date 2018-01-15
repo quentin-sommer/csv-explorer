@@ -61,7 +61,7 @@ export function consume(arr, workerNb) {
 async function workerCsvParser(data, {concurrency = 4} = {}) {
   perfStart('END workerMap')
   const promisesArr = []
-  const step = Math.floor(data.length / concurrency)
+  const step = Math.ceil(data.length / concurrency)
   const rows = data.filter(row => row.trim() !== '')
 
   console.log(
