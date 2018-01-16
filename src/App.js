@@ -13,20 +13,18 @@ const perfEnd = str => console.timeEnd(str)
 const memoizedCsvLineParser = memoizee(row => {
   const cells = []
   let isEscaped = false
-  let cellContent = ''
+  let cellStart = 0
   let char
   let len = row.length
   for (let i = 0; i < len; i++) {
     char = row[i]
     if (char === '"') isEscaped = !isEscaped
     if (char === ',' && !isEscaped) {
-      cells.push(cellContent)
-      cellContent = ''
-    } else {
-      cellContent += char
+      cells.push(row.substring(cellStart, i))
+      cellStart = i + 1
     }
   }
-  cells.push(cellContent)
+  cells.push(row.substring(cellStart))
   return cells
 })
 

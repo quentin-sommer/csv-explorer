@@ -21,7 +21,7 @@ const csvLineParser = row => {
     buffer = new Array(buffer.length)
   }
   let isEscaped = false
-  let cellContent = ''
+  let cellStart = 0
   let char
   let len = row.length
   let bufferIt = 0
@@ -29,16 +29,14 @@ const csvLineParser = row => {
     char = row[i]
     if (char === '"') isEscaped = !isEscaped
     if (char === ',' && !isEscaped) {
-      buffer[bufferIt] = cellContent
-      incrementOrNot(cellContent.length, bufferIt)
+      buffer[bufferIt] = row.substring(cellStart, i)
+      cellStart = i + 1
+      incrementOrNot(buffer[bufferIt].length, bufferIt)
       bufferIt++
-      cellContent = ''
-    } else {
-      cellContent += char
-    }
+    }  
   }
-  buffer[bufferIt] = cellContent
-  incrementOrNot(cellContent.length, bufferIt)
+  buffer[bufferIt] = row.substring(cellStart)
+  incrementOrNot(buffer[bufferIt].length, bufferIt)
   return buffer
 }
 
