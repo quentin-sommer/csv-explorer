@@ -84,14 +84,14 @@ class App extends Component {
     })
     perfEnd('processed rows')
 
-    const shouldBuildSortIndex = fileLines.length < 2e6
+    const shouldBuildSortIndex = fileLines.length < 4e6
     this.setState({
       rows: fileLines,
       headerCells,
       columnWidths,
       searcher: toIndex,
       loadingState: shouldBuildSortIndex
-        ? 'Building sort index...'
+        ? 'Building index...'
         : 'Sort unavailable: file too big',
       sortable: false,
       sortBy: null,
