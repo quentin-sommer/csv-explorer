@@ -1,4 +1,4 @@
-import workerize from 'workerize/dist/workerize.m.js'
+import workerize from 'workerize'
 
 const perfStart = str => console.time(str)
 const perfEnd = str => console.timeEnd(str)
