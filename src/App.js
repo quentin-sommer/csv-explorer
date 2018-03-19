@@ -39,6 +39,7 @@ const colWidthToPx = colWidth => colWidth * 10 + 20
 
 class App extends Component {
   state = {
+    filename: null,
     rows: [],
     sortedRows: [],
     headerCells: [],
@@ -57,17 +58,24 @@ class App extends Component {
   componentDidMount() {
     if (process.env.NODE_ENV !== 'production') {
       const testCsv = require('./testCsv').default
-      this.processCsvFile(testCsv)
+      this.processCsvFile(testCsv, 'DEV')
     }
   }
 
-  processCsvFile = async fileContent => {
+  componentWillUpdate() {
+    document.title = `${this.state.filename} - CSV Explorer`
+  }
+
+  processCsvFile = async (fileContent, filename) => {
     memoizedCsvLineParser.clear()
     const fileLines = fileContent.split('\n').filter(row => row.trim() !== '')
 
     perfStart('processed headers')
     const headerCells = memoizedCsvLineParser(fileLines.shift())
-    const firstLine = memoizedCsvLineParser(fileLines[0])
+    const firstLine = 
+      fileLines.length > 0
+        ? memoizedCsvLineParser(fileLines[0])
+        : new Array(headerCells.length).fill('')
     const columnWidths = headerCells.map((_, colIndex) => {
       const headerLen = headerCells[colIndex].length
       const lineLen = firstLine[colIndex].length
@@ -86,6 +94,7 @@ class App extends Component {
 
     const shouldBuildSortIndex = fileLines.length < 4e6
     this.setState({
+      filename,
       rows: fileLines,
       headerCells,
       columnWidths,
@@ -129,7 +138,8 @@ class App extends Component {
 
     reader.addEventListener('loadend', () => {
       perfEnd('read the file')
-      this.processCsvFile(reader.result)
+      console.log(reader.result)
+      this.processCsvFile(reader.result, file.name)
     })
     perfStart('read the file')
     this.setState({
