@@ -63,7 +63,9 @@ class App extends Component {
   }
 
   componentWillUpdate() {
-    document.title = `${this.state.filename} - CSV Explorer`
+    if (this.state.filename !== null) {
+      document.title = `${this.state.filename} - CSV Explorer`
+    }
   }
 
   processCsvFile = async (fileContent, filename) => {
