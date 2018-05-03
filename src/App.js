@@ -140,7 +140,6 @@ class App extends Component {
 
     reader.addEventListener('loadend', () => {
       perfEnd('read the file')
-      console.log(reader.result)
       this.processCsvFile(reader.result, file.name)
     })
     perfStart('read the file')
