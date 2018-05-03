@@ -1,3 +1,5 @@
-# csvViewer
+# csv-explorer
 
-Describe csvViewer here.
+Allow to vizualize csv files
+
+https://csv-explorer.netlify.com
