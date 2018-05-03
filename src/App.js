@@ -57,8 +57,10 @@ class App extends Component {
   // Only used in dev to pre load q csv
   componentDidMount() {
     if (process.env.NODE_ENV !== 'production') {
-      const testCsv = require('./testCsv').default
-      this.processCsvFile(testCsv, 'DEV')
+      // .json.fac
+      //this.processJsonFacFile(JSON.stringify(require('./testJsonfac.fac.json')), 'DEV')
+      // csv
+      this.processCsvFile(require('./testCsv').default, 'DEV')
     }
   }
 
@@ -74,7 +76,7 @@ class App extends Component {
 
     perfStart('processed headers')
     const headerCells = memoizedCsvLineParser(fileLines.shift())
-    const firstLine = 
+    const firstLine =
       fileLines.length > 0
         ? memoizedCsvLineParser(fileLines[0])
         : new Array(headerCells.length).fill('')
@@ -135,12 +137,47 @@ class App extends Component {
     }
   }
 
+  processJsonFacFile = (fileContent, filename) => {
+    const parsed = JSON.parse(fileContent)
+    const columns = parsed.keys
+    const rows = parsed.entities
+    const columnsToIgnore = ['configValueByKey', 'tempValueByKey', 'extraValueByKey']
+
+    const columnsToIgnoreIndexes = columnsToIgnore
+      .map(colName => parsed.keys.indexOf(colName))
+      // this garantee descending indexes and allow us to remove them one after another without alterting the elem the refer to
+      .sort()
+      .reverse()
+    // remove from the base set of colums
+    columnsToIgnoreIndexes.forEach(colIndex => columns.splice(colIndex, 1))
+
+    const columnsContaingRawValuesIndexes = columns
+      .filter(col => col.endsWith('WithRaw'))
+      .map(col => columns.indexOf(col))
+
+    rows.forEach(rowArr => {
+      columnsToIgnoreIndexes.forEach(colIndex => rowArr.splice(colIndex, 1))
+      columnsContaingRawValuesIndexes.forEach(
+        colIndex => (rowArr[colIndex] = rowArr[colIndex][0])
+      )
+    })
+
+    const csvRepresentation =
+      columns.join(',') + '\n' + rows.map(row => row.join(',')).join('\n')
+
+    return this.processCsvFile(csvRepresentation, filename)
+  }
+
   getCsvFile = file => {
     const reader = new FileReader()
 
     reader.addEventListener('loadend', () => {
       perfEnd('read the file')
-      this.processCsvFile(reader.result, file.name)
+      if (file.name.includes('.fac.json')) {
+        this.processJsonFacFile(reader.result, file.name)
+      } else {
+        this.processCsvFile(reader.result, file.name)
+      }
     })
     perfStart('read the file')
     this.setState({
