@@ -55,7 +55,6 @@ class App extends Component {
     sortDirection: null,
     sortBy: null,
     sortable: false,
-    fileTag: '',
     dropzoneActive: false,
   }
 
@@ -237,13 +236,8 @@ class App extends Component {
               Showing {this.state.sortedRows.length} of {this.state.rows.length}{' '}
               rows
               <div>
-                {this.state.headerCells.length} columns{' '}
-                {this.state.fileTag !== '' && (
-                  <span style={{color: 'rgb(0, 116, 217)'}}>
-                    {this.state.fileTag}{' '}
-                  </span>
-                )}
-                {this.state.filename} {this.state.loadingState}
+                {this.state.headerCells.length} columns {this.state.filename}{' '}
+                {this.state.loadingState}
               </div>
             </div>
             <div style={{marginLeft: '1rem'}}>
@@ -252,17 +246,6 @@ class App extends Component {
                 type="text"
                 placeholder="search"
                 onChange={this.handleOnSearchChange}
-              />
-            </div>
-            <div style={{marginLeft: '1rem'}}>
-              <input
-                type="text"
-                placeholder="tag"
-                onChange={e =>
-                  this.setState({
-                    fileTag: e.target.value,
-                  })
-                }
               />
             </div>
           </div>
