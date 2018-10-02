@@ -1,5 +1,11 @@
 import React, {Component} from 'react'
-import {Table, Column, AutoSizer, SortDirection, SortIndicator} from 'react-virtualized'
+import {
+  Table,
+  Column,
+  AutoSizer,
+  SortDirection,
+  SortIndicator,
+} from 'react-virtualized'
 import copy from 'copy-to-clipboard'
 import Dropzone from 'react-dropzone'
 import memoizee from 'memoizee'
@@ -46,7 +52,6 @@ class App extends Component {
     columnWidths: [],
     searchTerm: null,
     loadingState: null,
-    filename: null,
     sortDirection: null,
     sortBy: null,
     sortable: false,
@@ -57,9 +62,6 @@ class App extends Component {
   // Only used in dev to pre load q csv
   componentDidMount() {
     if (process.env.NODE_ENV !== 'production') {
-      // .json.fac
-      //this.processJsonFacFile(JSON.stringify(require('./testJsonfac.fac.json')), 'DEV')
-      // csv
       this.processCsvFile(require('./testCsv').default, 'DEV')
     }
   }
@@ -137,47 +139,12 @@ class App extends Component {
     }
   }
 
-  processJsonFacFile = (fileContent, filename) => {
-    const parsed = JSON.parse(fileContent)
-    const columns = parsed.keys
-    const rows = parsed.entities
-    const columnsToIgnore = ['configValueByKey', 'tempValueByKey', 'extraValueByKey']
-
-    const columnsToIgnoreIndexes = columnsToIgnore
-      .map(colName => parsed.keys.indexOf(colName))
-      // this garantee descending indexes and allow us to remove them one after another without alterting the elem the refer to
-      .sort()
-      .reverse()
-    // remove from the base set of colums
-    columnsToIgnoreIndexes.forEach(colIndex => columns.splice(colIndex, 1))
-
-    const columnsContaingRawValuesIndexes = columns
-      .filter(col => col.endsWith('WithRaw'))
-      .map(col => columns.indexOf(col))
-
-    rows.forEach(rowArr => {
-      columnsToIgnoreIndexes.forEach(colIndex => rowArr.splice(colIndex, 1))
-      columnsContaingRawValuesIndexes.forEach(
-        colIndex => (rowArr[colIndex] = rowArr[colIndex][0])
-      )
-    })
-
-    const csvRepresentation =
-      columns.join(',') + '\n' + rows.map(row => row.join(',')).join('\n')
-
-    return this.processCsvFile(csvRepresentation, filename)
-  }
-
   getCsvFile = file => {
     const reader = new FileReader()
 
     reader.addEventListener('loadend', () => {
       perfEnd('read the file')
-      if (file.name.includes('.fac.json')) {
-        this.processJsonFacFile(reader.result, file.name)
-      } else {
-        this.processCsvFile(reader.result, file.name)
-      }
+      this.processCsvFile(reader.result, file.name)
     })
     perfStart('read the file')
     this.setState({
@@ -241,8 +208,13 @@ class App extends Component {
         onDragEnter={this.onDragEnter}
         onDragLeave={this.onDragLeave}
       >
-        <div className="full-height" style={{display: 'flex', flexDirection: 'column'}}>
-          {this.state.dropzoneActive && <div className="overlay">Drop files...</div>}
+        <div
+          className="full-height"
+          style={{display: 'flex', flexDirection: 'column'}}
+        >
+          {this.state.dropzoneActive && (
+            <div className="overlay">Drop files...</div>
+          )}
           <div
             style={{
               display: 'flex',
@@ -262,11 +234,14 @@ class App extends Component {
               onChange={e => this.getCsvFile(e.target.files[0])}
             />
             <div style={{marginLeft: '.5rem', flex: 1}}>
-              Showing {this.state.sortedRows.length} of {this.state.rows.length} rows
+              Showing {this.state.sortedRows.length} of {this.state.rows.length}{' '}
+              rows
               <div>
                 {this.state.headerCells.length} columns{' '}
                 {this.state.fileTag !== '' && (
-                  <span style={{color: 'rgb(0, 116, 217)'}}>{this.state.fileTag} </span>
+                  <span style={{color: 'rgb(0, 116, 217)'}}>
+                    {this.state.fileTag}{' '}
+                  </span>
                 )}
                 {this.state.filename} {this.state.loadingState}
               </div>
