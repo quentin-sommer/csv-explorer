@@ -1,13 +1,6 @@
 import React, {Component} from 'react'
-import {
-  Table,
-  Column,
-  AutoSizer,
-  SortDirection,
-  SortIndicator,
-} from 'react-virtualized'
+import {Table, Column, AutoSizer, SortDirection, SortIndicator} from 'react-virtualized'
 import copy from 'copy-to-clipboard'
-import Dropzone from 'react-dropzone'
 import memoizee from 'memoizee'
 import workerCsvParser from './worker'
 
@@ -55,7 +48,6 @@ class App extends Component {
     sortDirection: null,
     sortBy: null,
     sortable: false,
-    dropzoneActive: false,
   }
 
   // Only used in dev to pre load q csv
@@ -118,11 +110,10 @@ class App extends Component {
       perfStart('worker total')
       const res = await workerCsvParser(fileLines)
       const rows = res.rows
-      const columnWidths = res.columnWidths.map(
-        (columnWidth, index) =>
-          columnWidth > this.state.columnWidths[index]
-            ? columnWidth
-            : this.state.columnWidths[index]
+      const columnWidths = res.columnWidths.map((columnWidth, index) =>
+        columnWidth > this.state.columnWidths[index]
+          ? columnWidth
+          : this.state.columnWidths[index]
       )
       perfEnd('worker total')
 
@@ -180,150 +171,118 @@ class App extends Component {
       searchTerm: searchText,
     }))
   }
-  onDragEnter = () =>
-    this.setState({
-      dropzoneActive: true,
-    })
-
-  onDragLeave = () =>
-    this.setState({
-      dropzoneActive: false,
-    })
 
   render() {
     return (
-      <Dropzone
-        disableClick
-        className="full-height"
-        style={{position: 'relative' /*, height: '100%'*/}}
-        onDrop={(acceptedFiles, rejectedFiles) => {
-          this.setState({
-            dropzoneActive: false,
-          })
-          if (acceptedFiles.length !== 0) {
-            this.getCsvFile(acceptedFiles[0])
-          }
-        }}
-        onDragEnter={this.onDragEnter}
-        onDragLeave={this.onDragLeave}
-      >
+      <div className="full-height" style={{display: 'flex', flexDirection: 'column'}}>
         <div
-          className="full-height"
-          style={{display: 'flex', flexDirection: 'column'}}
+          style={{
+            display: 'flex',
+            margin: '.25rem',
+            marginLeft: '.5rem',
+            maxWidth: '1200px',
+          }}
         >
-          {this.state.dropzoneActive && (
-            <div className="overlay">Drop files...</div>
-          )}
-          <div
-            style={{
-              display: 'flex',
-              margin: '.25rem',
-              marginLeft: '.5rem',
-              maxWidth: '1200px',
-            }}
-          >
-            <label className="button" htmlFor="file">
-              Select CSV file
-            </label>
-            <input
-              style={{display: 'none'}}
-              id="file"
-              type="file"
-              multiple={false}
-              onChange={e => this.getCsvFile(e.target.files[0])}
-            />
-            <div style={{marginLeft: '.5rem', flex: 1}}>
-              Showing {this.state.sortedRows.length} of {this.state.rows.length}{' '}
-              rows
-              <div>
-                {this.state.headerCells.length} columns {this.state.filename}{' '}
-                {this.state.loadingState}
-              </div>
-            </div>
-            <div style={{marginLeft: '1rem'}}>
-              <input
-                id="search-input"
-                type="text"
-                placeholder="search"
-                onChange={this.handleOnSearchChange}
-              />
+          <label className="button" htmlFor="file">
+            Select CSV file
+          </label>
+          <input
+            style={{display: 'none'}}
+            id="file"
+            type="file"
+            multiple={false}
+            onChange={e => this.getCsvFile(e.target.files[0])}
+          />
+          <div style={{marginLeft: '.5rem', flex: 1}}>
+            Showing {this.state.sortedRows.length} of {this.state.rows.length} rows
+            <div>
+              {this.state.headerCells.length} columns {this.state.filename}{' '}
+              {this.state.loadingState}
             </div>
           </div>
-          <div style={{flex: 1, overflowX: 'auto'}}>
-            <AutoSizer disableWidth>
-              {({height}) => (
-                <Table
-                  width={this.state.columnWidths.reduce(
-                    (acc, cur) => acc + colWidthToPx(cur),
-                    0
-                  )}
-                  height={height - 15}
-                  headerHeight={24}
-                  rowHeight={22}
-                  rowCount={this.state.sortedRows.length}
-                  rowGetter={({index}) =>
-                    this.state.sortable
-                      ? this.state.sortedRows[index]
-                      : memoizedCsvLineParser(this.state.sortedRows[index])
-                  }
-                  onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
-                  sort={({sortBy, sortDirection}) => {
-                    let newSort =
-                      this.state.sortDirection === SortDirection.ASC
-                        ? SortDirection.DESC
-                        : SortDirection.ASC
-                    this.setState({
-                      ...this._sort({
-                        sortBy,
-                        sortDirection: newSort,
-                        rows: this.state.sortedRows,
-                      }),
-                    })
-                  }}
-                  sortBy={`${this.state.sortBy}`}
-                  sortDirection={this.state.sortDirection}
-                >
-                  {this.state.columnWidths.map((colWidth, index) => (
-                    <Column
-                      disableSort={!this.state.sortable}
-                      key={index}
-                      dataKey={index}
-                      width={colWidthToPx(colWidth)}
-                      label={this.state.headerCells[index]}
-                      headerRenderer={({dataKey, sortBy, sortDirection}) => {
-                        sortBy = parseInt(sortBy, 10)
-                        return (
-                          <div>
-                            {this.state.headerCells[dataKey]}
-                            {sortBy === dataKey && (
-                              <SortIndicator sortDirection={sortDirection} />
-                            )}
-                          </div>
-                        )
-                      }}
-                      cellRenderer={({cellData, ...rest}) => {
-                        if (cellData == null) {
-                          return ''
-                        }
-                        let style = null
-                        if (
-                          this.state.searchTerm !== null &&
-                          cellData
-                            .toLowerCase()
-                            .includes(this.state.searchTerm.toLowerCase())
-                        ) {
-                          style = {backgroundColor: '#ADD6FF26'}
-                        }
-                        return <span style={style}>{cellData}</span>
-                      }}
-                    />
-                  ))}
-                </Table>
-              )}
-            </AutoSizer>
+          <div style={{marginLeft: '1rem'}}>
+            <input
+              id="search-input"
+              type="text"
+              placeholder="search"
+              onChange={this.handleOnSearchChange}
+            />
           </div>
         </div>
-      </Dropzone>
+        <div style={{flex: 1, overflowX: 'auto'}}>
+          <AutoSizer disableWidth>
+            {({height}) => (
+              <Table
+                width={this.state.columnWidths.reduce(
+                  (acc, cur) => acc + colWidthToPx(cur),
+                  0
+                )}
+                height={height - 15}
+                headerHeight={24}
+                rowHeight={22}
+                rowCount={this.state.sortedRows.length}
+                rowGetter={({index}) =>
+                  this.state.sortable
+                    ? this.state.sortedRows[index]
+                    : memoizedCsvLineParser(this.state.sortedRows[index])
+                }
+                onRowDoubleClick={({event}) => copy(event.target.innerHTML)}
+                sort={({sortBy, sortDirection}) => {
+                  let newSort =
+                    this.state.sortDirection === SortDirection.ASC
+                      ? SortDirection.DESC
+                      : SortDirection.ASC
+                  this.setState({
+                    ...this._sort({
+                      sortBy,
+                      sortDirection: newSort,
+                      rows: this.state.sortedRows,
+                    }),
+                  })
+                }}
+                sortBy={`${this.state.sortBy}`}
+                sortDirection={this.state.sortDirection}
+              >
+                {this.state.columnWidths.map((colWidth, index) => (
+                  <Column
+                    disableSort={!this.state.sortable}
+                    key={index}
+                    dataKey={index}
+                    width={colWidthToPx(colWidth)}
+                    label={this.state.headerCells[index]}
+                    headerRenderer={({dataKey, sortBy, sortDirection}) => {
+                      sortBy = parseInt(sortBy, 10)
+                      return (
+                        <div>
+                          {this.state.headerCells[dataKey]}
+                          {sortBy === dataKey && (
+                            <SortIndicator sortDirection={sortDirection} />
+                          )}
+                        </div>
+                      )
+                    }}
+                    cellRenderer={({cellData, ...rest}) => {
+                      if (cellData == null) {
+                        return ''
+                      }
+                      let style = null
+                      if (
+                        this.state.searchTerm !== null &&
+                        cellData
+                          .toLowerCase()
+                          .includes(this.state.searchTerm.toLowerCase())
+                      ) {
+                        style = {backgroundColor: '#ADD6FF26'}
+                      }
+                      return <span style={style}>{cellData}</span>
+                    }}
+                  />
+                ))}
+              </Table>
+            )}
+          </AutoSizer>
+        </div>
+      </div>
     )
   }
   static sorterCache = null
