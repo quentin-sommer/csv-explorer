@@ -9,6 +9,7 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
+  "browserslist": ["defaults"],
   "dependencies": {
     "copy-to-clipboard": "^3.0.8",
     "memoizee": "^0.4.11",
