@@ -1,5 +1,7 @@
 # csv-explorer
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/quentin-sommer/csv-explorer.svg)](https://greenkeeper.io/)
+
 Vizualize (very) big csv files
 
 https://csv-explorer.netlify.com
