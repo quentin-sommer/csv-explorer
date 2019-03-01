@@ -10,7 +10,7 @@
     "eject": "react-scripts eject"
   },
   "browserslist": ["defaults"],
-  "dependencies:": {
+  "dependencies": {
     "copy-to-clipboard": "^3.0.8",
     "memoizee": "^0.4.11",
     "react": "^16.1.1",
