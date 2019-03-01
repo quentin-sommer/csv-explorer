@@ -1,6 +1,6 @@
 # csv-explorer
 
-Allow to vizualize csv and `.fac.json` files
+Vizualize (very) big csv files
 
 https://csv-explorer.netlify.com
 
