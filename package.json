@@ -7,7 +7,7 @@
     "memoizee": "^0.4.11",
     "react": "^16.8.3",
     "react-dom": "^16.8.3",
-    "react-scripts": "2.1.5",
+    "react-scripts": "2.1.6",
     "react-virtualized": "^9.12.0",
     "workerize": "^0.1.2"
   },
