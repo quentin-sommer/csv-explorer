@@ -57,7 +57,7 @@ class App extends Component {
     }
   }
 
-  componentWillUpdate() {
+  componentDidUpdate() {
     if (this.state.filename !== null) {
       document.title = `${this.state.filename} - CSV Explorer`
     }
@@ -96,9 +96,7 @@ class App extends Component {
       headerCells,
       columnWidths,
       searcher: toIndex,
-      loadingState: shouldBuildSortIndex
-        ? 'Building index...'
-        : 'Sort unavailable: file too big',
+      loadingState: shouldBuildSortIndex ? 'Building index...' : 'Sort unavailable: file too big',
       sortable: false,
       sortBy: null,
       sortDirection: null,
@@ -111,9 +109,7 @@ class App extends Component {
       const res = await workerCsvParser(fileLines)
       const rows = res.rows
       const columnWidths = res.columnWidths.map((columnWidth, index) =>
-        columnWidth > this.state.columnWidths[index]
-          ? columnWidth
-          : this.state.columnWidths[index]
+        columnWidth > this.state.columnWidths[index] ? columnWidth : this.state.columnWidths[index]
       )
       perfEnd('worker total')
 
@@ -213,10 +209,7 @@ class App extends Component {
           <AutoSizer disableWidth>
             {({height}) => (
               <Table
-                width={this.state.columnWidths.reduce(
-                  (acc, cur) => acc + colWidthToPx(cur),
-                  0
-                )}
+                width={this.state.columnWidths.reduce((acc, cur) => acc + colWidthToPx(cur), 0)}
                 height={height - 15}
                 headerHeight={24}
                 rowHeight={22}
@@ -255,9 +248,7 @@ class App extends Component {
                       return (
                         <div>
                           {this.state.headerCells[dataKey]}
-                          {sortBy === dataKey && (
-                            <SortIndicator sortDirection={sortDirection} />
-                          )}
+                          {sortBy === dataKey && <SortIndicator sortDirection={sortDirection} />}
                         </div>
                       )
                     }}
@@ -268,9 +259,7 @@ class App extends Component {
                       let style = null
                       if (
                         this.state.searchTerm !== null &&
-                        cellData
-                          .toLowerCase()
-                          .includes(this.state.searchTerm.toLowerCase())
+                        cellData.toLowerCase().includes(this.state.searchTerm.toLowerCase())
                       ) {
                         style = {backgroundColor: '#ADD6FF26'}
                       }

@@ -56,56 +56,20 @@ export function consume(arr, workerNb) {
     }
 }`
 
-const getNbWorkers = length => {
-  if (length < 500e3) return 1
-  if (length < 1000e3) return 2
-  return 4
-}
+let worker = null
 
 async function workerCsvParser(data) {
-  perfStart('END workerMap')
-  const concurrency = getNbWorkers(data.length)
-  const promisesArr = []
-  const step = Math.ceil(data.length / concurrency)
-  const rows = data.filter(row => row.trim() !== '')
+  console.log('START workerMap data ' + data.length)
+  perfStart('END worker')
 
-  console.log(
-    'START workerMap data',
-    rows.length,
-    'concurrency',
-    concurrency,
-    'step size',
-    step
-  )
-
-  perfStart('map')
-  const workers = []
-  for (let i = 0; i < rows.length; i += step) {
-    const consumer = workerize(csvLineParserMapper)
-    promisesArr.push(consumer.consume(rows.slice(i, i + step), i / step + 1))
-    workers.push()
+  if (worker === null) {
+    worker = workerize(csvLineParserMapper)
   }
-  const ret = await Promise.all(promisesArr)
-  workers.forEach(worker => worker.kill())
-  perfEnd('map')
+  const ret = await worker.consume(data)
 
-  perfStart('reduce')
-  const concated = ret.reduce(
-    (acc, cur) => {
-      return {
-        rows: acc.rows.concat(cur.rows),
-        columnWidths: cur.columnWidths.map(
-          (col, index) => (acc.columnWidths[index] > col ? acc.columnWidths[index] : col)
-        ),
-      }
-    },
-    {rows: [], columnWidths: []}
-  )
-  perfEnd('reduce')
+  perfEnd('END worker')
 
-  perfEnd('END workerMap')
-
-  return concated
+  return ret
 }
 
 export default workerCsvParser
