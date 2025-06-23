@@ -4,7 +4,7 @@
 
 Vizualize (very) big csv files
 
-https://csv-explorer.netlify.com
+[https://csv-explorer.netlify.app](https://csv-explorer.netlify.app)
 
 steps to deploy:
 
